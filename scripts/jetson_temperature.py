@@ -139,7 +139,7 @@ def main():
             header = [
                 "date",
                 "time",
-                SENSORS
+                *SENSORS
             ]
 
             file.write(",".join(header) + "\n")
