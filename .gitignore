@@ -3,3 +3,12 @@
 env/
 venv/
 
+*.db3
+*.csv
+*.json
+*.avi
+*.mkv
+*.mp4
+
+*.txt
+!requirements.txt
