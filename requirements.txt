@@ -1,1 +1,10 @@
+﻿# Dependencias principales del proyecto dt_Hyundai
+
+# Adquisicion y procesamiento de camara Intel RealSense
+pyrealsense2>=2.54.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# Graficos e interfaces de usuario (GUI Temperatura y Visor)
 matplotlib>=3.7.0
+pillow>=9.5.0

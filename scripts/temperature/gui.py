@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-LOGS_DIR = Path(__file__).resolve().parent.parent / "temperature_logs"
+LOGS_DIR = Path(__file__).resolve().parent.parent.parent / "temperature_logs"
 BASE_DATE = date(2000, 1, 1)
 
 class TemperatureViewer:
