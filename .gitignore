@@ -1,14 +1,30 @@
-# Python
+﻿# Python / Entorno virtual
 .venv/
 env/
 venv/
+__pycache__/
+*.pyc
 
+# Archivos y formatos de grabacion
 *.db3
-*.csv
-*.json
+*.db3-wal
+*.db3-shm
 *.avi
 *.mkv
 *.mp4
 
+# Carpetas de datos y grabaciones locales
+realsense/grabaciones/
+grabaciones/
+dataset_local/
+
+# Registros y formatos de datos
+*.csv
+*.json
 *.txt
 !requirements.txt
+
+# Archivos de depuracion / temporales
+*.log
+.DS_Store
+Thumbs.db

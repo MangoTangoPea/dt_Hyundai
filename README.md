@@ -4,7 +4,7 @@ Sistema desacoplado de adquisición de alto ancho de banda, almacenamiento optim
 
 ---
 
-## 🚀 Arquitectura del Proyecto
+## Arquitectura del Proyecto
 
 ```
 dt_Hyundai/
@@ -17,7 +17,7 @@ dt_Hyundai/
 │   ├── recorder/                   # MÓDULO 1: Backend de Grabación a 30 FPS en NVMe
 │   │   ├── camera_manager.py       # Pipeline 4 canales (1280x720) y timestamps por hardware
 │   │   ├── db3_recorder.py         # Grabador asíncrono SQLite WAL (Queue FIFO RAM 150)
-│   │   ├── mosaic_builder.py       # Monitor de previsualización RGB en vivo, FPS, TS, ● REC
+│   │   ├── mosaic_builder.py       # Monitor de previsualización RGB en vivo, FPS, TS, REC
 │   │   └── main_recorder.py        # Orquestador del backend y servidor IPC
 │   │
 │   ├── viewer/                     # MÓDULO 2: Frontend X11 y Control Remoto
@@ -50,7 +50,7 @@ dt_Hyundai/
 
 ---
 
-## 📦 Especificaciones de Flujos de Datos
+## Especificaciones de Flujos de Datos
 
 | Parámetro | Previsualización Remota (Canal X11 / Captura) | Almacenamiento Local (Dataset `.db3` en NVMe) | Inspección Offline en PC (`main_inspector.py`) |
 | :--- | :--- | :--- | :--- |
@@ -62,7 +62,7 @@ dt_Hyundai/
 
 ---
 
-## 🛠️ Instalación
+## Instalación
 
 1. Clonar el repositorio:
    ```bash
@@ -86,7 +86,7 @@ dt_Hyundai/
 
 ---
 
-## 🎮 Guía de Uso Operativo (100% Python)
+## Guía de Uso Operativo (100% Python)
 
 ### 1. En la NVIDIA Jetson Orin Nano (Captura y Control Remoto)
 
@@ -150,7 +150,7 @@ python realsense/inspector/main_inspector.py
 
 ---
 
-## 🌡️ Módulo Adicional: Monitor de Temperaturas
+## Módulo Adicional: Monitor de Temperaturas
 
 Para visualizar las curvas térmicas registradas en la Jetson:
 ```bash
