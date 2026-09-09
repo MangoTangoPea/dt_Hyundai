@@ -19,8 +19,8 @@ class RealSenseCamera:
 
     def __init__(
         self,
-        color_size=(640, 480),
-        depth_size=(640, 480),
+        color_size=(1280, 720),
+        depth_size=(1280, 720),
         fps=30,
     ):
         self.color_size = color_size
