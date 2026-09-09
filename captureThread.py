@@ -1,19 +1,16 @@
 import cv2
-import os
 import time
 import queue
 import threading
-from datetime import datetime
 
-from camera import Camera
+from grabacion_db3 import DB3Recorder
+from realsense_camera import RealSenseCamera
 from displayThread import DisplayThread
 
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
-
-CAMERA_INDEX = 0
 
 # Visualization
 DEBUG = True
@@ -32,92 +29,6 @@ PIPE_QUEUE_SIZE = 1
 # VIDEO RECORDER
 # ============================================================
 
-class VideoRecorder:
-
-    def __init__(self, directory):
-
-        self.directory = directory
-
-        self.writer = None
-        self.filename = None
-
-        os.makedirs(
-            self.directory,
-            exist_ok=True
-        )
-
-    def start(self, width, height, fps):
-
-        if self.writer is not None:
-            print("Already recording.")
-            return
-
-        timestamp = datetime.now().strftime(
-            "%Y%m%d_%H%M%S"
-        )
-
-        self.filename = os.path.join(
-            self.directory,
-            f"video_{timestamp}.avi"
-        )
-
-        fourcc = cv2.VideoWriter_fourcc(
-            *"XVID"
-        )
-
-        self.writer = cv2.VideoWriter(
-            self.filename,
-            fourcc,
-            fps,
-            (width, height)
-        )
-
-        if not self.writer.isOpened():
-
-            self.writer = None
-            self.filename = None
-
-            raise RuntimeError(
-                "Could not create video file"
-            )
-
-        print()
-        print("Recording started:")
-        print(f"  File: {self.filename}")
-        print(
-            f"  Resolution: {width}x{height}"
-        )
-        print(
-            f"  FPS: {fps:.2f}"
-        )
-        print()
-
-    def write(self, frame):
-
-        if self.writer is not None:
-            self.writer.write(frame)
-
-    def stop(self):
-
-        if self.writer is None:
-            return
-
-        self.writer.release()
-
-        print()
-        print(
-            f"Recording stopped: {self.filename}"
-        )
-        print()
-
-        self.writer = None
-        self.filename = None
-
-    def is_recording(self):
-
-        return self.writer is not None
-
-
 # ============================================================
 # COMMAND THREAD
 # ============================================================
@@ -127,13 +38,35 @@ class CommandThread(threading.Thread):
     def __init__(
         self,
         command_queue,
-        stop_event
+        stop_event,
+        recorder
     ):
 
         super().__init__(daemon=True)
 
         self.command_queue = command_queue
         self.stop_event = stop_event
+        self.recorder = recorder
+
+    def ask_category(self):
+        valid_categories = "/".join(
+            self.recorder.CATEGORIES
+        )
+
+        while True:
+            print(
+                f"Recording class ({valid_categories}): ",
+                end="",
+                flush=True,
+            )
+            category = input().strip().upper()
+
+            if category in self.recorder.CATEGORIES:
+                return category
+
+            print(
+                f"Invalid class. Choose: {valid_categories}."
+            )
 
     def run(self):
 
@@ -164,6 +97,9 @@ class CommandThread(threading.Thread):
                 "S",
                 "E"
             ):
+
+                if command in ("S", "E") and self.recorder.is_recording():
+                    command = (command, self.ask_category())
 
                 self.command_queue.put(
                     command
@@ -224,19 +160,19 @@ class CaptureThread(threading.Thread):
             except queue.Empty:
                 break
 
+            category = None
+            if isinstance(command, tuple):
+                command, category = command
+
             if command == "R":
 
                 if not self.recorder.is_recording():
 
-                    self.recorder.start(
-                        self.camera.width,
-                        self.camera.height,
-                        self.camera.fps
-                    )
+                    self.recorder.start(self.camera)
 
             elif command == "S":
 
-                self.recorder.stop()
+                self.recorder.stop(category)
 
             elif command == "E":
 
@@ -244,7 +180,7 @@ class CaptureThread(threading.Thread):
                     "E command received."
                 )
 
-                self.recorder.stop()
+                self.recorder.stop(category)
 
                 self.stop_event.set()
 
@@ -258,7 +194,7 @@ class CaptureThread(threading.Thread):
 
         # Reduce ONLY the visualization copy.
         small_frame = cv2.resize(
-            frame,
+            frame.color,
             (640, 480),
             interpolation=cv2.INTER_AREA
         )
@@ -308,9 +244,9 @@ class CaptureThread(threading.Thread):
             # CAPTURE
             # -----------------------------------------------
 
-            frame = self.camera.read()
+            capture = self.camera.read()
 
-            if frame is None:
+            if capture is None:
 
                 print(
                     "Camera capture failed."
@@ -325,7 +261,7 @@ class CaptureThread(threading.Thread):
 
             if self.recorder.is_recording():
 
-                self.recorder.write(frame)
+                self.recorder.write(capture)
 
             # -----------------------------------------------
             # PIPE
@@ -338,7 +274,7 @@ class CaptureThread(threading.Thread):
                 >= pipe_period
             ):
 
-                self.send_to_display(frame)
+                self.send_to_display(capture)
 
                 self.last_pipe_time = now
 
@@ -365,9 +301,7 @@ def main():
     # Camera
     # --------------------------------------------------------
 
-    camera = Camera(
-        CAMERA_INDEX
-    )
+    camera = RealSenseCamera()
 
     try:
 
@@ -398,9 +332,7 @@ def main():
     # Recorder
     # --------------------------------------------------------
 
-    recorder = VideoRecorder(
-        RECORD_DIR
-    )
+    recorder = DB3Recorder(RECORD_DIR)
 
     # --------------------------------------------------------
     # Threads
@@ -423,7 +355,8 @@ def main():
 
     command_thread = CommandThread(
         command_queue,
-        stop_event
+        stop_event,
+        recorder,
     )
 
     # --------------------------------------------------------
