@@ -1,4 +1,5 @@
-# Python
+﻿# Python
+__pycache__/
 .venv/
 env/
 venv/
@@ -9,6 +10,7 @@ venv/
 *.avi
 *.mkv
 *.mp4
+*.pyc
 
 *.txt
 !requirements.txt
