@@ -6,7 +6,23 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-LOGS_DIR = Path(__file__).resolve().parent.parent / "temperature_logs"
+def find_logs_dir():
+    """Busca automáticamente la carpeta de logs en todas las ubicaciones probables."""
+    home = Path.home()
+    candidates = [
+        # Subcarpetas temperature_logs en OneDrive y local
+        home / "temperature_logs",
+        # En el directorio actual del repositorio
+        (Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()),
+        Path.cwd(),
+    ]
+    for p in candidates:
+        if p.exists() and (list(p.glob("temperature*.txt")) or list(p.glob("*temperature*.txt"))):
+            return p
+
+    return home / "temperature_logs"
+
+LOGS_DIR = find_logs_dir()
 BASE_DATE = date(2000, 1, 1)
 
 class TemperatureViewer:
@@ -35,8 +51,12 @@ class TemperatureViewer:
 
     def refresh(self):
         """Busca los 10 últimos logs, actualiza checkboxes y redibuja la gráfica cada 10s"""
-        files = sorted(glob.glob(str(LOGS_DIR / "*.txt")), reverse=True)[:10]
-        file_names = [os.path.basename(f) for f in files]
+        # Aceptar tanto temperature_ como temperatures_
+        files = sorted(
+            list(LOGS_DIR.glob("temperature_*.txt")) + list(LOGS_DIR.glob("temperatures_*.txt")),
+            reverse=True
+        )[:10]
+        file_names = [f.name for f in files]
 
         # Si cambió la lista de archivos, reconstruir los checkboxes conservando selecciones
         if file_names != list(self.variables.keys()):
