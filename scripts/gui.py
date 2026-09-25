@@ -7,20 +7,9 @@ import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def find_logs_dir():
-    """Busca automáticamente la carpeta de logs en todas las ubicaciones probables."""
-    home = Path.home()
-    candidates = [
-        # Subcarpetas temperature_logs en OneDrive y local
-        home / "temperature_logs",
-        # En el directorio actual del repositorio
-        (Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()),
-        Path.cwd(),
-    ]
-    for p in candidates:
-        if p.exists() and (list(p.glob("temperature*.txt")) or list(p.glob("*temperature*.txt"))):
-            return p
-
-    return home / "temperature_logs"
+    # Encuentra el primer archivo temperature*.txt en todo tu usuario (C:\Users\... o /home/...)
+    first_log = next(Path.home().rglob("*temperature*.txt"), None)
+    return first_log.parent if first_log else Path.home() / "temperature_logs"  
 
 LOGS_DIR = find_logs_dir()
 BASE_DATE = date(2000, 1, 1)
