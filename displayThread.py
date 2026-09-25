@@ -45,3 +45,4 @@ class DisplayThread(threading.Thread):
             cv2.destroyAllWindows()
 
         print("Display thread stopped.")
+        

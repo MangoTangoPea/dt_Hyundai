@@ -19,15 +19,10 @@ DEBUG = True
 FPS_pipe = 1.0
 
 # Recorded video directory
-RECORD_DIR = "recordings"
+RECORD_DIR = "/home/gigseea/SSD/recordings"
 
 # Keep only the newest visualization frame
-PIPE_QUEUE_SIZE = 1
-
-
-# ============================================================
-# VIDEO RECORDER
-# ============================================================
+PIPE_QUEUE_SIZE = 10
 
 # ============================================================
 # COMMAND THREAD
@@ -97,13 +92,17 @@ class CommandThread(threading.Thread):
                 "S",
                 "E"
             ):
+                command_name = command
 
-                if command in ("S", "E") and self.recorder.is_recording():
+                if command == "S" and self.recorder.is_recording():
                     command = (command, self.ask_category())
 
                 self.command_queue.put(
                     command
                 )
+
+                if command_name == "E":
+                    return
 
             else:
 
@@ -209,18 +208,7 @@ class CaptureThread(threading.Thread):
             )
 
         except queue.Full:
-
-            try:
-                self.frame_queue.get_nowait()
-            except queue.Empty:
-                pass
-
-            try:
-                self.frame_queue.put_nowait(
-                    small_frame
-                )
-            except queue.Full:
-                pass
+            pass
 
     # --------------------------------------------------------
     # MAIN LOOP
@@ -404,3 +392,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

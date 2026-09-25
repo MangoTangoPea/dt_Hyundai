@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import sqlite3
+import time
 from datetime import datetime
 
 import numpy as np
@@ -31,6 +32,7 @@ class DB3Recorder:
         )
         self.connection = sqlite3.connect(self.filename)
         self.connection.execute("PRAGMA journal_mode=WAL")
+                
         self.connection.executescript(
             """
             CREATE TABLE recording_metadata (
@@ -66,6 +68,9 @@ class DB3Recorder:
             ],
         )
         self.connection.commit()
+        # wait for the WAL to be fully written to disk
+        self.connection.execute("PRAGMA wal_checkpoint(FULL)")  
+
         print(f"Recording started: {self.filename}")
 
     def write(self, capture):
@@ -106,15 +111,24 @@ class DB3Recorder:
                 for name, array in channels.items()
             ],
         )
-        self.connection.commit()
+        # self.connection.commit()
 
     def stop(self, category=None):
         if self.connection is None:
             return
 
+        stop_started = time.perf_counter()
         source_filename = self.filename
+        
         self.connection.commit()
+        # wait for the WAL to be fully written to disk
+        self.connection.execute("PRAGMA wal_checkpoint(FULL)")  
+
+
         self.connection.close()
+        
+        
+        
         self.connection = None
         self.filename = None
 
@@ -132,7 +146,12 @@ class DB3Recorder:
         )
         shutil.move(source_filename, destination_filename)
 
-        print(f"Recording stopped: {destination_filename}")
+        elapsed_seconds = time.perf_counter() - stop_started
+        print(
+            f"Recording stopped: {destination_filename} "
+            f"(disk write time: {elapsed_seconds:.3f} s)"
+        )
 
     def is_recording(self):
         return self.connection is not None
+        
